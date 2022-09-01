@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd http://www.springframework.org/schema/mvc
+       http://www.springframework.org/schema/mvc/spring-mvc.xsd "
+
+>
+    <!-- 使用注解的包，包括子集 -->
+    <context:component-scan base-package="com.zj.everybodyvotes.*"/>
+
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+        <property name="maxUploadSize" value="25000000"/>
+        <property name="defaultEncoding" value="UTF-8"/>
+    </bean>
+
+    <!--注入hibernate的验证器-->
+    <bean id="validator" class="org.springframework.validation.beanvalidation.LocalValidatorFactoryBean">
+        <property name="providerClass"  value="org.hibernate.validator.HibernateValidator"/>
+    </bean>
+
+    <!-- Start: 配置json消息转换器 & 参数解析-->
+    <bean id="objectMapper" class="com.fasterxml.jackson.databind.ObjectMapper"/>
+
+    <mvc:annotation-driven validator="validator">
+        <mvc:message-converters>
+            <bean class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">
+                <property name="supportedMediaTypes">
+                    <list>
+                        <value>application/json;charset=UTF-8</value>
+                    </list>
+                </property>
+                <property name="prettyPrint" value="true"/>
+                <property name="objectMapper" ref="objectMapper"/>
+            </bean>
+        </mvc:message-converters>
+    </mvc:annotation-driven>
+    <!-- End: 配置json消息转换器 & 参数解析 -->
+
+    <!-- 使用了<url-pattern>/</url-pattern>,所以要对静态资源进行处理 -->
+    <mvc:default-servlet-handler/>
+
+    <mvc:interceptors>
+        <mvc:interceptor>
+            <mvc:mapping path="/**"/>
+            <bean class="com.zj.everybodyvotes.interceptor.TokenIntercept"/>
+        </mvc:interceptor>
+    </mvc:interceptors>
+
+    <bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
+        <property name="host" value="smtp.qq.com"/>
+        <property name="port" value="465"/>
+        <property name="username" value="2317537731@qq.com"/>
+        <property name="password" value="fzjitwkosvasecic"/>
+        <property name="defaultEncoding" value="UTF-8"/>
+        <property name="javaMailProperties">
+            <props>
+                <prop key="mail.smtp.auth">true</prop>
+                <prop key="mail.smtp.ssl.enable">true</prop>
+            </props>
+        </property>
+    </bean>
+
+    <mvc:cors>
+        <mvc:mapping path="/**"
+                     allowed-origins="http://localhost:8080,http://127.0.0.1:8080,http://localhost:8080,http://127.0.0.1:8080"
+                     allowed-methods="GET,POST,PUT,POST,DELETE"
+                     max-age="3600" />
+    </mvc:cors>
+
+</beans>
